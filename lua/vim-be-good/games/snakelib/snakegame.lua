@@ -1,7 +1,7 @@
 local V = vim.api
-local C = require('vim-be-good.games.snakelib.const')
-local Grid = require('vim-be-good.games.snakelib.grid')
-local Snake = require('vim-be-good.games.snakelib.snake')
+local C = require("vim-be-good.games.snakelib.const")
+local Grid = require("vim-be-good.games.snakelib.grid")
+local Snake = require("vim-be-good.games.snakelib.snake")
 
 local SnakeGame = {}
 
@@ -31,7 +31,7 @@ function SnakeGame:new(width, height, difficultyLevel, endGameCallback)
 
     local scoreBuf = V.nvim_create_buf(false, true)
     local scoreWin = V.nvim_open_win(scoreBuf, false, {
-        relative = 'win',
+        relative = "win",
         focusable = false,
         title = "Snake",
         title_pos = "center",
@@ -40,26 +40,29 @@ function SnakeGame:new(width, height, difficultyLevel, endGameCallback)
         col = col,
         width = width,
         height = 1,
-        style = 'minimal',
-        border = 'rounded',
+        style = "minimal",
+        border = "rounded",
+        zindex = 100,
     })
 
     local gridBuf = V.nvim_create_buf(false, true)
     local gridWin = V.nvim_open_win(gridBuf, true, {
-        relative = 'win',
+        relative = "win",
         win = scoreWin,
         noautocmd = true,
         row = 2,
         col = -1,
         width = width,
         height = height,
-        style = 'minimal',
-        border = 'rounded',
+        style = "minimal",
+        border = "rounded",
+        zindex = 100,
     })
-    V.nvim_buf_set_option(gridBuf, 'modifiable', false)
+    V.nvim_buf_set_option(gridBuf, "modifiable", false)
+    vim.wo[gridWin].sidescrolloff = 0
     -- Setup key press handlers for h,j,k,l
-    for _, key in pairs({'h','j','k','l'}) do
-        vim.keymap.set({'n'}, key, function ()
+    for _, key in pairs({ "h", "j", "k", "l" }) do
+        vim.keymap.set({ "n" }, key, function()
             self.snake:setDir(C.KeyDirMap[key])
         end, { buffer = gridBuf })
     end
@@ -67,12 +70,12 @@ function SnakeGame:new(width, height, difficultyLevel, endGameCallback)
     local gameGrid = Grid:new(gridBuf, width, height, C.GridChar)
 
     -- When the game is closed (the grid), also close the Scores window.
-    V.nvim_create_autocmd({"WinClosed"}, {
+    V.nvim_create_autocmd({ "WinClosed" }, {
         pattern = { tostring(gridWin) },
         callback = function(_)
             self.gridWin = nil
             self:shutdown(self.endGameCallback)
-        end
+        end,
     })
 
     local newGame = {
@@ -85,8 +88,8 @@ function SnakeGame:new(width, height, difficultyLevel, endGameCallback)
         snake = {},
         score = 0,
         noWalls = difficultyLevel < 4,
-        speed = SpeedLevel[difficultyLevel],  -- technically slowness
-        endGameCallback = endGameCallback
+        speed = SpeedLevel[difficultyLevel], -- technically slowness
+        endGameCallback = endGameCallback,
     }
     self = setmetatable(newGame, self)
     return self
@@ -99,9 +102,13 @@ function SnakeGame:start()
     self.food = {}
     self.snake = Snake:new(self.grid.width / 2, self.grid.height / 2, 3, self.noWalls)
     self.gameTimer = vim.loop.new_timer()
-    self.gameTimer:start(0, self.speed, vim.schedule_wrap(function()
-        self:render()
-    end))
+    self.gameTimer:start(
+        0,
+        self.speed,
+        vim.schedule_wrap(function()
+            self:render()
+        end)
+    )
     self:updateScore()
 end
 
@@ -165,7 +172,7 @@ function SnakeGame:addFood()
     local y = math.random(self.grid.height)
     local char = self.grid:getChar(x, y)
     if char == C.GridChar then
-       table.insert(self.food, {x = x, y = y})
+        table.insert(self.food, { x = x, y = y })
     end
 end
 
@@ -179,15 +186,15 @@ end
 
 -- Draws the HUD in the HUD window with the score.
 function SnakeGame:updateScore()
-    local walls = 'Walls:Y'
+    local walls = "Walls:Y"
     if self.noWalls then
-        walls = 'Walls:N'
+        walls = "Walls:N"
     end
     local speedRange = SpeedLevel[1] - SpeedLevel[5]
     local baseSpeedLevel = SpeedLevel[1] + 10
     local speedFrac = math.ceil(100 * (baseSpeedLevel - self.speed) / speedRange)
-    local speed = tostring(speedFrac)..'%'
-    local status = walls..' | '..'Spd:'..speed..' | '..'Score: '..self.score
+    local speed = tostring(speedFrac) .. "%"
+    local status = walls .. " | " .. "Spd:" .. speed .. " | " .. "Score: " .. self.score
     V.nvim_buf_set_lines(self.scoreBuf, 0, -1, false, { status })
 end
 
@@ -196,7 +203,9 @@ function SnakeGame:handleSnakeDied()
     self.snake:oops()
     self:cancelTimer()
     -- After 3s, close the game and call the end game callback
-    vim.defer_fn(function() self:shutdown(self.endGameCallback) end, 3000)
+    vim.defer_fn(function()
+        self:shutdown(self.endGameCallback)
+    end, 3000)
 end
 
 -- Cancels the time and frees its resources.

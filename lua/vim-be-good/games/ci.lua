@@ -3,7 +3,7 @@ local log = require("vim-be-good.log")
 local gameLineCount = 20
 
 local instructions = {
-    "Replace the content of the outer container, or the executable content of the if statement, with \"bar\"",
+    'Replace the content of the outer container, or the executable content of the if statement, with "bar"',
     "",
     "e.g.:",
     "if (foo) {       if (foo) {",
@@ -22,7 +22,7 @@ local instructions = {
 
 local CiRound = {}
 function CiRound:new(difficulty, window)
-   log.info("New", difficulty, window)
+    log.info("New", difficulty, window)
     local round = {
         window = window,
         difficulty = difficulty,
@@ -72,7 +72,7 @@ end
 function CiRound:render()
     local lines = GameUtils.createEmpty(gameLineCount)
     local linesAfterInstructions = gameLineCount - #instructions
-    local insertionIndex = GameUtils.getRandomInsertionLocation(gameLineCount, 6, #instructions)
+    local insertionIndex = GameUtils.getRandomInsertionLocation(gameLineCount, 6, 1)
     local goHigh = insertionIndex < gameLineCount / 2 and math.random() > 0.5
 
     local cursorIdx
@@ -86,15 +86,15 @@ function CiRound:render()
         lines[insertionIndex] = "if (" .. self.config.randomWord .. ") {"
         lines[insertionIndex + 2] = "    if (" .. GameUtils.getRandomWord() .. ") { "
         lines[insertionIndex + 3] = "        " .. GameUtils.getRandomWord()
-        lines[insertionIndex + 4] = "    }";
-        lines[insertionIndex + 5] = "}";
+        lines[insertionIndex + 4] = "    }"
+        lines[insertionIndex + 5] = "}"
     else
-        lines[insertionIndex] = "[";
+        lines[insertionIndex] = "["
         lines[insertionIndex + 1] = "    " .. GameUtils.getRandomWord() .. ","
         lines[insertionIndex + 2] = "    " .. GameUtils.getRandomWord() .. ","
         lines[insertionIndex + 3] = "    " .. GameUtils.getRandomWord() .. ","
         lines[insertionIndex + 4] = "    " .. GameUtils.getRandomWord() .. ","
-        lines[insertionIndex + 5] = "]";
+        lines[insertionIndex + 5] = "]"
     end
 
     return lines, cursorIdx
